@@ -15,7 +15,7 @@ const App: React.FC = () => {
           <NavLink to="/add" className="nav-link" data-testid="add-expense">
             Add Expense
           </NavLink>
-          <NavLink to="/total" className="nav-link" data-testid="total-page">
+          <NavLink to="/total" className="nav-link" data-testid="total-link">
             Total
           </NavLink>
         </nav>

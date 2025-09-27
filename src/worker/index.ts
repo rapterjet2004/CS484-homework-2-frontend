@@ -62,14 +62,15 @@ app.delete("/api/expenses/:id", async (c) => {
     const result = await db.update(expenses).set({ deleted: true }).where(eq(expenses.id, expenseId));
 
     // If no rows were affected, return a 404 error
-    if (result.results.length === 0) {
+    if (!result || !Array.isArray(result) || result.length === 0) {
       return c.json({ error: "Expense not found" }, 404);
     }
 
-    // If deletion was successful, return a success message
+    // If deletion was successful, return a success message and the deleted expense
+    const deletedExpense = await db.select().from(expenses).where(eq(expenses.id, expenseId));
     return c.json({
       message: "Expense deleted successfully",
-      expense: { id: expenseId },
+      expense: { ...deletedExpense[0], deleted: true },
     });
   } catch (err) {
     console.error("Error deleting expense:", err);
@@ -113,7 +114,7 @@ app.put("/api/expenses/:id", async (c) => {
     }).where(eq(expenses.id, expenseId));
 
     // If no rows were affected, return a 404 error
-    if (result.results.length === 0) {
+    if (!result || !Array.isArray(result) || result.length === 0) {
       return c.json({ error: "Expense not found" }, 404);
     }
 
