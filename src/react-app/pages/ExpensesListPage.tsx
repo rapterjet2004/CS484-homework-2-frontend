@@ -33,10 +33,14 @@ const ExpensesListPage: React.FC = () => {
   };
 
   useEffect(() => {
-    //TODO: Fetch the list of expenses from the server
+    // Fetch the list of expenses from the server
     (async () => {
       try {
-      } catch (e) {}
+        const data = await fetchExpenses();
+        setExpenses(data);
+      } catch (e) {
+        openDialog("Failed to fetch expenses");
+      }
     })();
   }, []);
 
@@ -47,24 +51,22 @@ const ExpensesListPage: React.FC = () => {
   };
 
   const sortedExpenses = [...expenses].sort((a, b) => {
-    //TODO: Have the sorting logic here for date(default when you land on the page) and cost, asc and desc.
-    //TODO: use the helper function `toTime`
+    // Sorting logic for date and cost
     let cmp = 0;
     if (sortBy === "date") {
-      //TODO: Add logic
+      cmp = toTime(a.date) - toTime(b.date);
     } else {
-      //TODO: Add logic
+      cmp = Number(a.cost) - Number(b.cost);
     }
     return sortDir === "asc" ? cmp : -cmp;
   });
 
   //TODO: Define the pagination logic here for the expenses list based on PAGE_SIZE and the current page number.
-  // Also compute the total number of pages based on the length of sortedExpenses
-  // and PAGE_SIZE, and ensure that the current page is within valid bounds.
-  const totalPages = 0;
+  // Pagination logic for expenses list
+  const totalPages = Math.max(1, Math.ceil(sortedExpenses.length / PAGE_SIZE));
   useEffect(() => setPage(1), [totalPages]);
-  const startIdx = 0;
-  const pagedExpenses = sortedExpenses;
+  const startIdx = (page - 1) * PAGE_SIZE;
+  const pagedExpenses = sortedExpenses.slice(startIdx, startIdx + PAGE_SIZE);
 
   const toggleDir = () => setSortDir((d) => (d === "asc" ? "desc" : "asc"));
 
@@ -79,22 +81,42 @@ const ExpensesListPage: React.FC = () => {
 
   const saveEdit = async (id: string | number, next: TempEdit) => {
     const parsedCost = parseFloat(next.cost);
-    //TODO: Validate the inputs before saving the edit
+    // Validate the inputs before saving the edit
+    if (!next.description.trim()) {
+      openDialog("Description is required");
+      return;
+    }
+    if (!next.date) {
+      openDialog("Date is required");
+      return;
+    }
+    if (isNaN(parsedCost) || parsedCost < 0) {
+      openDialog("Cost must be a non-negative number");
+      return;
+    }
     setEditingId(null);
-
     try {
-      //TODO: Send the data to the server to update the expense
+      await updateExpense(id, {
+        description: next.description,
+        date: next.date,
+        cost: parsedCost,
+      });
+      const updated = await fetchExpenses();
+      setExpenses(updated);
     } catch (e) {
       console.error("Failed to save edit:", e);
+      openDialog("Failed to save edit");
     }
   };
 
   const deleteExpense = async (id: string | number) => {
     try {
-      // TODO: Send the delete request to the server
-      // and fetch the updated list of expenses
+      await apiDelete(id);
+      const updated = await fetchExpenses();
+      setExpenses(updated);
     } catch (e) {
       console.error("Failed to delete:", e);
+      openDialog("Failed to delete expense");
     }
     setPage((p) => {
       const newCount = Math.max(0, sortedExpenses.length - 1);

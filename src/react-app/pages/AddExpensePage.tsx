@@ -20,10 +20,24 @@ const AddExpensePage: React.FC = () => {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    //TODO: Validate the inputs before adding the expense
+    // Validate the inputs before adding the expense
+    if (!desc.trim()) {
+      openDialog("Description is required");
+      return;
+    }
+    if (!date) {
+      openDialog("Date is required");
+      return;
+    }
+    if (!cost || isNaN(Number(cost)) || Number(cost) < 0) {
+      openDialog("Cost must be a non-negative number");
+      return;
+    }
 
     try {
-      //TODO: Send the data to the server to add the expense using utils/addExpense
+      // Send the data to the server to add the expense using utils/addExpense
+      await addExpense({ description: desc, date, cost: Number(cost) });
+      navigate("/");
     } catch (err) {
       console.error("Failed to add:", err);
       openDialog("Failed to add expense");
