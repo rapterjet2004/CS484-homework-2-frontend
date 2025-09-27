@@ -59,7 +59,11 @@ app.delete("/api/expenses/:id", async (c) => {
   try {
     // Delete the expense from the database by setting deleted flag
     const expenseId = Number(id);
-    const result = await db.update(expenses).set({ deleted: true }).where(eq(expenses.id, expenseId));
+    const result = await db
+      .update(expenses)
+      .set({ deleted: true })
+      .where(eq(expenses.id, expenseId))
+      .returning();
 
     // If no rows were affected, return a 404 error
     if (!result || !Array.isArray(result) || result.length === 0) {
@@ -111,7 +115,8 @@ app.put("/api/expenses/:id", async (c) => {
       description,
       date,
       cost,
-    }).where(eq(expenses.id, expenseId));
+    }).where(eq(expenses.id, expenseId))
+    .returning();
 
     // If no rows were affected, return a 404 error
     if (!result || !Array.isArray(result) || result.length === 0) {
